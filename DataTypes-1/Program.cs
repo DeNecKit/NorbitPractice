@@ -33,4 +33,11 @@ string CalculateDeposit(double initialDeposit, int years, double interestRate)
     return result.ToString();
 }
 
-Console.WriteLine(CalculateDeposit(1000.0, 3, 10.0));
+try
+{
+    Console.WriteLine(CalculateDeposit(1000.0, 3, 10.0));
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine(ex.Message);
+}
