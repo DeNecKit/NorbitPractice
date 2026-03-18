@@ -1,5 +1,17 @@
 ﻿using System.Text;
 
+/// <summary>
+/// Расчёт сложных процентов по годам.
+/// </summary>
+/// 
+/// <param name="initialDeposit">Начальная сумма вклада.</param>
+/// <param name="years">Срок вклада в годах.</param>
+/// <param name="interestRate">Годовая процентная ставка.</param>
+/// 
+/// <returns>
+/// Строка, включающая в себя сумму накоплений
+/// на конец каждого года вклада.
+/// </returns>
 string CalculateDeposit(double initialDeposit, int years, double interestRate)
 {
     if (initialDeposit <= 0)
