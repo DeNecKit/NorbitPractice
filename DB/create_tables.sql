@@ -59,7 +59,7 @@ CREATE TABLE Tickets (
     [Row] SMALLINT,
     Seat SMALLINT,
     IsRefunded BIT NOT NULL,
-    PRIMARY KEY (Id, [Row], Seat),
+    PRIMARY KEY (SessionId, [Row], Seat),
 );
 
 CREATE UNIQUE INDEX IX_Ticket_Id ON Tickets(Id);
