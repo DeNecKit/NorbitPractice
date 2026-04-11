@@ -10,4 +10,16 @@ public class ApplicationContext : DbContext
 
     public ApplicationContext(DbContextOptions<ApplicationContext> options)
         : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => new
+            {
+                ticket.SessionId,
+                ticket.Row,
+                ticket.Seat,
+            })
+            .IsUnique();
+    }
 }
