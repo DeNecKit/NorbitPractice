@@ -27,6 +27,8 @@ jobs:
         working-directory: ./CinemaApp/client-app
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      - name: Copy 404.html
+        run: cp ./CinemaApp/client-app/dist/index.html CinemaApp/client-app/dist/404.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
