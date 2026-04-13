@@ -2,6 +2,8 @@
     import { ref, onMounted } from 'vue';
     import { useRoute } from 'vue-router';
 
+    const ROOT = import.meta.env.VITE_API_BASE_URL;
+
     const route = useRoute();
 
     const loading = ref(true);
@@ -41,7 +43,7 @@
 
     onMounted(async () => {
         try {
-            const res = await fetch(`https://localhost:7297/api/tickets?sessionId=${route.params.id}`);
+            const res = await fetch(`${ROOT}/api/tickets?sessionId=${route.params.id}`);
             const data = await res.json();
             if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
             occupiedSeats = data;

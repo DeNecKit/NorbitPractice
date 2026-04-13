@@ -1,6 +1,8 @@
 <script lang="ts" setup>
     import { ref, onMounted } from 'vue';
 
+    const ROOT = import.meta.env.VITE_API_BASE_URL;
+
     const loading = ref(true);
     const error = ref<{ status: boolean, msg?: string }>({ status: false });
     let movies: {
@@ -11,7 +13,7 @@
 
     onMounted(async () => {
         try {
-            const res = await fetch('https://localhost:7297/api/movies');
+            const res = await fetch(`${ROOT}/api/movies`);
             const data = await res.json();
             if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
             movies = data;

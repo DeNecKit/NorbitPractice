@@ -3,6 +3,8 @@
     import { useRoute, useRouter } from 'vue-router';
     import SeatSelect from '@/components/SeatSelect.vue';
 
+    const ROOT = import.meta.env.VITE_API_BASE_URL;
+
     const route = useRoute();
     const router = useRouter();
 
@@ -35,7 +37,7 @@
             let price: number;
 
             {
-                const res = await fetch(`https://localhost:7297/api/sessions/${route.params.id}`);
+                const res = await fetch(`${ROOT}/api/sessions/${route.params.id}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
                 id = data.id;
@@ -44,7 +46,7 @@
                 price = data.price;
             }
             {
-                const res = await fetch(`https://localhost:7297/api/movies/${movieId}`);
+                const res = await fetch(`${ROOT}/api/movies/${movieId}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
                 movieTitle = data.title;
@@ -69,7 +71,7 @@
 
         try {
             const res = await fetch(
-                'https://localhost:7297/api/tickets',
+                `${ROOT}/api/tickets`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

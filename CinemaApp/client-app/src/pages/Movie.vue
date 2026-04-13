@@ -2,6 +2,8 @@
     import { ref, computed, onMounted } from 'vue';
     import { useRoute } from 'vue-router';
 
+    const ROOT = import.meta.env.VITE_API_BASE_URL;
+
     const route = useRoute();
 
     const selectedDate = ref(new Date());
@@ -53,13 +55,13 @@
     onMounted(async () => {
         try {
             {
-                const res = await fetch(`https://localhost:7297/api/movies/${route.params.id}`);
+                const res = await fetch(`${ROOT}/api/movies/${route.params.id}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
                 movie = data;
             }
             {
-                const res = await fetch(`https://localhost:7297/api/sessions?movieId=${route.params.id}`);
+                const res = await fetch(`${ROOT}/api/sessions?movieId=${route.params.id}`);
                 const data = await res.json();
                 if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
                 data.forEach((session: { id: number, price: number, dateAndTime: string }) => {

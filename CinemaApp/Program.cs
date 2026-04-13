@@ -11,11 +11,12 @@ var conString = builder.Configuration.GetConnectionString("CinemaAPI") ??
 builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseSqlServer(conString));
 
+var allowedOrigin = builder.Configuration.GetValue<string>("AllowedOrigin");
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVueFrontend", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(allowedOrigin)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -40,7 +41,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowVueFrontend");
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
