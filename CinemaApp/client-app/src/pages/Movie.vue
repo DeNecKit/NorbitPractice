@@ -1,46 +1,29 @@
 <script lang="ts" setup>
-    // TODO: $route.params.id
-    import { ref, computed } from 'vue';
+    import { ref, computed, onMounted } from 'vue';
+    import { useRoute } from 'vue-router';
+
+    const route = useRoute();
 
     const selectedDate = ref(new Date());
 
-    const movie = {
-        id: 1,
-        title: "Интерстеллар",
-        posterUrl: "https://m.media-amazon.com/images/M/MV5BYzdjMDAxZGItMjI2My00ODA1LTlkNzItOWFjMDU5ZDJlYWY3XkEyXkFqcGc@._V1_SX300.jpg",
-        releaseDate: "07 Nov 2014",
-        genres: "Adventure, Drama, Sci-Fi",
-        ageRating: "PG-13",
-        description: "Earth's future has been riddled by disasters, famines, and droughts. There is only one way to ensure mankind's survival: Interstellar travel. A newly discovered wormhole in the far reaches of our solar system allows a team of astronauts to go where no man has gone before, a planet that may have the right environment to sustain human life."
+    const loading = ref(true);
+    const error = ref<{ status: boolean, msg?: string }>({ status: false });
+    let movie: {
+        id: number,
+        title: string,
+        releaseDate: string,
+        ageRating: string,
+        duration: number,
+        description: string,
+        posterURL: string,
+        genres: string,
     };
 
-    const sessions = [
-        {
-            id: 1,
-            dateAndTime: new Date(2026,3,25, 13,0),
-            price: 400,
-        },
-        {
-            id: 2,
-            dateAndTime: new Date(2026,3,26, 13,0),
-            price: 400,
-        },
-        {
-            id: 3,
-            dateAndTime: new Date(2026,3,27, 13,0),
-            price: 400,
-        },
-        {
-            id: 4,
-            dateAndTime: new Date(2026,3,27, 15,0),
-            price: 400,
-        },
-        {
-            id: 5,
-            dateAndTime: new Date(2026,3,27, 17,0),
-            price: 400,
-        },
-    ]
+    const sessions: {
+        id: number,
+        price: number,
+        dateAndTime: Date,
+    }[] = [];
 
     function equalDates(date1: Date, date2: Date) {
         return date1.getFullYear() === date2.getFullYear() &&
@@ -53,86 +36,131 @@
         return sessions.filter(session => equalDates(session.dateAndTime, selectedDate.value));
     });
 
-    const formattedDate = computed(() => {
-        if (!selectedDate.value) return '';
-        return selectedDate.value.toLocaleDateString('ru-RU', {
+    function formatDate(date: Date) {
+        if (!date) return '';
+        return date.toLocaleDateString('ru-RU', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
         });
-    });
+    }
 
     function hasSessions(date: string) {
         const dateObj = new Date(date);
         return sessions.some(session => equalDates(session.dateAndTime, dateObj));
     }
+
+    onMounted(async () => {
+        try {
+            {
+                const res = await fetch(`https://localhost:7297/api/movies/${route.params.id}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
+                movie = data;
+            }
+            {
+                const res = await fetch(`https://localhost:7297/api/sessions?movieId=${route.params.id}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
+                data.forEach((session: { id: number, price: number, dateAndTime: string }) => {
+                    const { id, price, dateAndTime } = session;
+                    sessions.push({ id: id, price: price, dateAndTime: new Date(dateAndTime) });
+                });
+            }
+        } catch (err) {
+            error.value = { status: true, msg: (err as Error).message };
+        } finally {
+            loading.value = false;
+        }
+    });
 </script>
 
 <template>
-    <v-container>
-        <div class="text-display-large mb-8 mt-8 text-center">{{ movie.title }}</div>
-        <v-row>
-            <v-col cols="4">
-                <v-img rounded="lg" :src="movie.posterUrl"></v-img>
+    <v-app-bar class="pa-4">
+        <v-row align="center" no-gutters>
+            <v-col cols="2" class="d-flex justify-start">
+                <v-btn v-slot:prepend v-if="!loading && !error.status" to="/">
+                    <div class="text-headline-small text-center">Назад</div>
+                </v-btn>
             </v-col>
-            <v-col cols="4">
-                <v-table>
-                    <tbody>
-                        <tr>
-                            <td>Дата выхода</td>
-                            <td>{{ movie.releaseDate }}</td>
-                        </tr>
-                        <tr>
-                            <td>Жанры</td>
-                            <td>{{ movie.genres }}</td>
-                        </tr>
-                        <tr>
-                            <td>Возрастное ограничение</td>
-                            <td>{{ movie.ageRating }}</td>
-                        </tr>
-                    </tbody>
-                </v-table>
-                <div class="text-body-large mb-8 mt-8 text-justify">{{ movie.description }}</div>
+            <v-col cols="8" class="d-flex justify-center">
+                <div class="text-display-medium text-center">Кинотеатр «Cinema»</div>
             </v-col>
-            <v-col cols="4">
-                <v-date-picker
-                    v-model="selectedDate"
-                    control-variant="modal"
-                    show-adjacent-months
-                    landscape
-                    locale="ru"
-                    :events="hasSessions"
-                    event-color="green lighten-1"
-                />
-                <div class="text-title-large mb-8 mt-8 text-justify">Сеансы на {{ formattedDate }}</div>
-                <v-container class="d-flex flex-column justify-center">
-                    <v-row>
-                        <v-card
-                            v-for="session in filteredSessions"
-                            class="py-4 pa-4"
-                            color="surface-variant"
-                            rounded="lg"
-                            variant="tonal"
-                            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D"
-                            rel="noopener noreferrer"
-                            target="_self"
-                        >
-                            <v-col>
-                                {{ session.dateAndTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) }}
-                            </v-col>
-                            <v-col>
-                                {{ session.price }} Р
-                            </v-col>
-                        </v-card>
-                    </v-row>
-                </v-container>
-                <div
-                    class="text-body-large mb-8 text-justify"
-                    v-if="filteredSessions.length === 0"
-                >
-                    Нет сеансов на выбранную дату
-                </div>
-            </v-col>
+            <v-col cols="2"/>
         </v-row>
+    </v-app-bar>
+    <v-container>
+        <div v-if="loading" class="text-display-large mb-8 mt-8 text-center">Загрузка...</div>
+        <div v-else-if="error.status" class="text-display-large mb-8 mt-8 text-center">Ошибка загрузки: {{ error.msg }}</div>
+        <div v-else>
+            <div class="text-display-large mb-8 mt-8 text-center">{{ movie.title }}</div>
+            <v-row>
+                <v-col cols="4">
+                    <v-img rounded="lg" :src="movie.posterURL"></v-img>
+                </v-col>
+                <v-col cols="4">
+                    <v-table>
+                        <tbody>
+                            <tr>
+                                <td>Дата выхода</td>
+                                <td>{{ formatDate(new Date(movie.releaseDate)) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Жанры</td>
+                                <td>{{ movie.genres }}</td>
+                            </tr>
+                            <tr>
+                                <td>Возрастное ограничение</td>
+                                <td>{{ movie.ageRating }}</td>
+                            </tr>
+                            <tr>
+                                <td>Длительность</td>
+                                <td>{{ movie.duration }} мин.</td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+                    <div class="text-body-large mb-8 mt-8 text-justify">{{ movie.description }}</div>
+                </v-col>
+                <v-col cols="4">
+                    <v-date-picker
+                        v-model="selectedDate"
+                        control-variant="modal"
+                        show-adjacent-months
+                        landscape
+                        locale="ru"
+                        :events="hasSessions"
+                        event-color="green lighten-1"
+                    />
+                    <div class="text-title-large mb-8 mt-8 text-justify">Сеансы на {{ formatDate(selectedDate) }}</div>
+                    <v-container class="d-flex flex-column justify-center">
+                        <v-row>
+                            <v-card
+                                v-for="session in filteredSessions"
+                                class="py-4 pa-4"
+                                color="surface-variant"
+                                rounded="lg"
+                                variant="tonal"
+                                :to="'/sessions/' + session.id"
+                                rel="noopener noreferrer"
+                                target="_self"
+                            >
+                                <v-col>
+                                    {{ session.dateAndTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) }}
+                                </v-col>
+                                <v-col>
+                                    {{ session.price }} Р
+                                </v-col>
+                            </v-card>
+                        </v-row>
+                    </v-container>
+                    <div
+                        class="text-body-large mb-8 text-justify"
+                        v-if="filteredSessions.length === 0"
+                    >
+                        Нет сеансов на выбранную дату
+                    </div>
+                </v-col>
+            </v-row>
+        </div>
     </v-container>
 </template>

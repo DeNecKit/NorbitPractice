@@ -20,6 +20,12 @@ public class GetTicketDTO
     public decimal Price { get; set; }
 }
 
+public class GetTicketSeatDTO
+{
+    public byte Row { get; set; }
+    public byte Seat { get; set; }
+}
+
 public class CreateTicketDTO
 {
     public Guid PublicId { get; set; }

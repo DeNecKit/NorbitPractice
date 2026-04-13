@@ -1,14 +1,15 @@
 <script lang="ts" setup>
-    import { ref } from 'vue';
+    import { ref, onMounted } from 'vue';
+    import { useRoute } from 'vue-router';
+
+    const route = useRoute();
+
+    const loading = ref(true);
+    const error = ref<{ status: boolean, msg?: string }>({ status: false });
+    let occupiedSeats: { row: number, seat: number }[];
 
     const rowsCount = 5;
     const seatsPerRow = 8;
-
-    const occupiedSeats = ref([
-        { row: 2, seat: 3 },
-        { row: 2, seat: 4 },
-        { row: 4, seat: 7 },
-    ]);
 
     const selectedSeat = ref<{ row: number, seat: number } | null>(null);
 
@@ -18,7 +19,7 @@
     }>();
 
     function isOccupied(row: number, seat: number): boolean {
-        return occupiedSeats.value.some(s => s.row === row && s.seat === seat);
+        return occupiedSeats.some(s => s.row === row && s.seat === seat);
     }
 
     function isSelected(row: number, seat: number): boolean {
@@ -37,10 +38,25 @@
         if (isSelected(row, seat)) return 'primary';
         return 'secondary';
     }
+
+    onMounted(async () => {
+        try {
+            const res = await fetch(`https://localhost:7297/api/tickets?sessionId=${route.params.id}`);
+            const data = await res.json();
+            if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
+            occupiedSeats = data;
+        } catch (err) {
+            error.value = { status: true, msg: (err as Error).message };
+        } finally {
+            loading.value = false;
+        }
+    });
 </script>
 
 <template>
-    <v-container>
+    <div v-if="loading" class="text-headline-small mb-8 mt-8 text-center">Загрузка...</div>
+    <div v-else-if="error.status" class="text-headline-small mb-8 mt-8 text-center">Ошибка загрузки: {{ error.msg }}</div>
+    <v-container v-else>
         <v-row justify="center">
             <v-col cols="auto">
             <div class="text-h6 text-center mb-4">Экран</div>
@@ -54,23 +70,17 @@
                     variant="tonal"
                     size="small"
                     @click="toggleSeat(row, seat)"
-                    class="seat-btn"
+                    style="min-width: 40px;"
                 >
                     {{ seat }}
                 </v-btn>
                 </div>
             </div>
+            <div v-if="selectedSeat !== null" class="text-headline-small mb-8 mt-8 text-center">
+                Ряд {{ selectedSeat.row }}, Место {{ selectedSeat.seat }}
+            </div>
+            <div v-else class="text-headline-small mb-8 mt-8 text-center">Выберите место</div>
             </v-col>
         </v-row>
     </v-container>
 </template>
-
-<style scoped>
-    .seat-btn {
-        min-width: 40px;
-        transition: all 0.2s;
-    }
-    .seat-btn:not(:disabled):hover {
-        transform: scale(1.05);
-    }
-</style>

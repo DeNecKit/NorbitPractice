@@ -31,6 +31,21 @@ public class TicketsController(ApplicationContext context) : ControllerBase
         };
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<GetTicketSeatDTO>>> GetBySession(int? sessionId)
+    {
+        if (sessionId is null) return BadRequest();
+
+        return await _context.Tickets
+            .Where(ticket => ticket.SessionId == sessionId)
+            .Select(ticket => new GetTicketSeatDTO
+            {
+                Row = ticket.Row,
+                Seat = ticket.Seat
+            })
+            .ToListAsync();
+    }
+
     [HttpPost]
     public async Task<ActionResult> Post(CreateTicketDTO dto)
     {

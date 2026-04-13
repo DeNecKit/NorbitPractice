@@ -1,31 +1,42 @@
 <script lang="ts" setup>
-    const movies = [
-        {
-            id: 1,
-            title: "Интерстеллар",
-            posterUrl: "https://m.media-amazon.com/images/M/MV5BYzdjMDAxZGItMjI2My00ODA1LTlkNzItOWFjMDU5ZDJlYWY3XkEyXkFqcGc@._V1_SX300.jpg"
-        },
-        {
-            id: 2,
-            title: "Титаник",
-            posterUrl: "https://m.media-amazon.com/images/M/MV5BYzYyN2FiZmUtYWYzMy00MzViLWJkZTMtOGY1ZjgzNWMwN2YxXkEyXkFqcGc@._V1_SX300.jpg"
-        },
-        {
-            id: 3,
-            title: "Человек-паук: Новый день",
-            posterUrl: "https://m.media-amazon.com/images/M/MV5BMTJhZGE3NmYtYTg0Ny00MWUzLWE0MmUtYTZjYTg1ZjVlMWRkXkEyXkFqcGc@._V1_SX300.jpg"
-        },
-        {
-            id: 4,
-            title: "Мегамозг",
-            posterUrl: "https://m.media-amazon.com/images/M/MV5BMTAzMzI0NTMzNDBeQTJeQWpwZ15BbWU3MDM3NTAyOTM@._V1_SX300.jpg"
+    import { ref, onMounted } from 'vue';
+
+    const loading = ref(true);
+    const error = ref<{ status: boolean, msg?: string }>({ status: false });
+    let movies: {
+        id: number,
+        title: string,
+        posterURL: string,
+    }[] = [];
+
+    onMounted(async () => {
+        try {
+            const res = await fetch('https://localhost:7297/api/movies');
+            const data = await res.json();
+            if (!res.ok) throw new Error(`${data.status}: ${data.title}`);
+            movies = data;
+        } catch (err) {
+            error.value = { status: true, msg: (err as Error).message };
+        } finally {
+            loading.value = false;
         }
-    ];
+    });
 </script>
 
 <template>
+    <v-app-bar class="pa-4">
+        <v-row align="center" no-gutters>
+            <v-col cols="2"/>
+            <v-col cols="8" class="d-flex justify-center">
+                <div class="text-display-medium text-center">Кинотеатр «Cinema»</div>
+            </v-col>
+            <v-col cols="2"/>
+        </v-row>
+    </v-app-bar>
     <v-container class="fill-height d-flex flex-column justify-center" max-width="1200">
-        <div>
+        <div v-if="loading" class="text-display-large mb-8 mt-8 text-center">Загрузка...</div>
+        <div v-else-if="error.status" class="text-display-large mb-8 mt-8 text-center">Ошибка загрузки: {{ error.msg }}</div>
+        <div v-else>
             <div class="text-display-large mb-8 mt-8 text-center">Каталог фильмов</div>
             <v-row>
                 <v-col v-for="movie in movies" :key="movie.id" cols="3">
@@ -34,12 +45,12 @@
                         color="surface-variant"
                         rounded="lg"
                         variant="tonal"
-                        href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D"
+                        :to="'/movies/' + movie.id"
                         rel="noopener noreferrer"
                         target="_self"
                     >
                         <div class="text-headline-small py-4 text-center">{{movie.title}}</div>
-                        <v-img class="mt-4" position="bottom" :src="movie.posterUrl"/>
+                        <v-img class="mt-4" position="bottom" :src="movie.posterURL"/>
                     </v-card>
                 </v-col>
             </v-row>

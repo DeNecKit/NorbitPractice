@@ -10,6 +10,7 @@ import Movies from '@/pages/Movies.vue'
 import Movie from '@/pages/Movie.vue'
 import Session from '@/pages/Session.vue'
 import NotFound from '@/pages/NotFound.vue'
+import Ticket from '@/pages/Ticket.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,10 @@ const router = createRouter({
     {
       path: '/sessions/:id',
       component: Session,
+    },
+    {
+      path: '/tickets/:id',
+      component: Ticket,
     },
     {
       path: '/:pathMatch(.*)*',
