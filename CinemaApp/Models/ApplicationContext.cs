@@ -14,6 +14,9 @@ public class ApplicationContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.PublicId);
+
+        modelBuilder.Entity<Ticket>()
             .HasIndex(ticket => new
             {
                 ticket.SessionId,

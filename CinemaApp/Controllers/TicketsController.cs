@@ -10,33 +10,69 @@ public class TicketsController(ApplicationContext context) : ControllerBase
 {
     private readonly ApplicationContext _context = context;
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Ticket>>> GetAll()
+    [HttpGet("{publicId}")]
+    public async Task<ActionResult<GetTicketDTO>> Get(Guid publicId)
     {
-        return await _context.Tickets.ToListAsync();
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Ticket>> Get(int id)
-    {
-        Ticket? ticket = await _context.Tickets.FindAsync(id);
+        Ticket? ticket = await _context.Tickets
+            .Include(ticket => ticket.Session)
+            .ThenInclude(session => session.Movie)
+            .FirstOrDefaultAsync(
+                ticket => ticket.PublicId == publicId);
         if (ticket is null) return NotFound();
-        return ticket;
+
+        return new GetTicketDTO
+        {
+            PublicId = ticket.PublicId,
+            MovieTitle = ticket.Session.Movie.Title,
+            DateAndTime = ticket.Session.DateAndTime,
+            Row = ticket.Row,
+            Seat = ticket.Seat,
+            Price = ticket.Session.Price,
+        };
     }
 
     [HttpPost]
-    public async Task<ActionResult> Post(Ticket item)
+    public async Task<ActionResult> Post(CreateTicketDTO dto)
     {
+        Ticket ticket = new()
+        {
+            PublicId = dto.PublicId,
+            SessionId = dto.SessionId,
+            Row = dto.Row,
+            Seat = dto.Seat,
+        };
+
         try
         {
-            await _context.Tickets.AddAsync(item);
+            await _context.Tickets.AddAsync(ticket);
             await _context.SaveChangesAsync();
         }
-        catch (Exception ex)
+        catch (DbUpdateConcurrencyException ex)
         {
-            return Problem(title: "Internal server error", detail: ex.Message);
+            return BadRequest(ex.Message);
         }
 
-        return CreatedAtAction(nameof(Get), new { id = item.Id }, item);
+        Session? session = await _context.Sessions
+            .FindAsync(ticket.SessionId);
+        ticket.Session = session!;
+
+        Movie? movie = await _context.Movies
+            .FindAsync(ticket.Session.MovieId);
+        ticket.Session.Movie = movie!;
+
+        return CreatedAtAction
+        (
+            nameof(Get),
+            new { id = ticket.Id },
+            new GetTicketDTO
+            {
+                PublicId = ticket.PublicId,
+                MovieTitle = ticket.Session.Movie.Title,
+                DateAndTime = ticket.Session.DateAndTime,
+                Row = ticket.Row,
+                Seat = ticket.Seat,
+                Price = ticket.Session.Price,
+            }
+        );
     }
 }

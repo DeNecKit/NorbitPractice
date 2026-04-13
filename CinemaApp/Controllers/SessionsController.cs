@@ -11,9 +11,10 @@ public class SessionsController(ApplicationContext context) : ControllerBase
     private readonly ApplicationContext _context = context;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Session>>> GetAll()
+    public async Task<ActionResult<IEnumerable<Session>>> GetAll(int? movieId)
     {
-        return await _context.Sessions.ToListAsync();
+        if (movieId is null) return await _context.Sessions.ToListAsync();
+        return await _context.Sessions.Where(session => session.MovieId == movieId).ToListAsync();
     }
 
     [HttpGet("{id}")]

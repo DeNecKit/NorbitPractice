@@ -10,5 +10,4 @@ public class Session
     [Precision(8, 2)]
     public decimal Price { get; set; }
     public DateTimeOffset DateAndTime { get; set; }
-    public virtual List<Ticket> Tickets { get; set; } = null!;
 }
