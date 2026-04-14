@@ -35,7 +35,14 @@
 
     const filteredSessions = computed(() => {
         if (!selectedDate.value) return [];
-        return sessions.filter(session => equalDates(session.dateAndTime, selectedDate.value));
+
+        const now = Date.now();
+
+        return sessions
+            .filter(
+                session => equalDates(session.dateAndTime, selectedDate.value) &&
+                           session.dateAndTime.getTime() >= now)
+            .sort((s1, s2) => s1.dateAndTime.getTime() - s2.dateAndTime.getTime());
     });
 
     function formatDate(date: Date) {
@@ -49,7 +56,13 @@
 
     function hasSessions(date: any) {
         const dateObj = new Date(date);
-        return sessions.some(session => equalDates(session.dateAndTime, dateObj));
+        const today = new Date();
+
+        dateObj.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        return dateObj >= today &&
+               sessions.some(session => equalDates(session.dateAndTime, dateObj));
     }
 
     onMounted(async () => {
