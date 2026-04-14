@@ -47,7 +47,7 @@
         });
     }
 
-    function hasSessions(date: string) {
+    function hasSessions(date: any) {
         const dateObj = new Date(date);
         return sessions.some(session => equalDates(session.dateAndTime, dateObj));
     }
@@ -130,8 +130,7 @@
                         show-adjacent-months
                         landscape
                         locale="ru"
-                        :events="hasSessions"
-                        event-color="green lighten-1"
+                        :allowed-dates="hasSessions"
                     />
                     <div class="text-title-large mb-8 mt-8 text-justify">Сеансы на {{ formatDate(selectedDate) }}</div>
                     <v-container class="d-flex flex-column justify-center">
